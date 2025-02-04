@@ -1,5 +1,4 @@
-﻿
-namespace SandiaNationalLaboratories.Hyram {
+﻿namespace SandiaNationalLaboratories.Hyram {
 	partial class QraResultsPanel {
 		/// <summary> 
 		/// Required designer variable.

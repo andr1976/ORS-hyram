@@ -176,8 +176,8 @@ class Flame:
             rho = self.chem.rho_prod(f)
             drhodf = self.chem.drhodf(f)
 
-        rho_int = integrate.trapz(self.ambient.rho - rho, r)
-
+        #rho_int = integrate.trapz(self.ambient.rho - rho, r)
+        rho_int = integrate.trapezoid(self.ambient.rho - rho, r)
         Ebuoy = Ebuoy = (2 * np.pi * self.alpha_buoy * np.sin(theta) * const.g * rho_int /
                          (B * V_cl * self.developing_flow.fluid_exp.rho))  # m**2/s
         E = self.Emom + Ebuoy
@@ -185,7 +185,8 @@ class Flame:
         # right-hand side of governing equations:
         RHS = np.array([self.ambient.rho * E / (2 * const.pi),  # continuity
                         self.wind_speed * self.ambient.rho * E / (2 * const.pi),  # x-momentum
-                        integrate.trapz((self.ambient.rho - rho) * const.g * r, r),  # y-momentum
+                        integrate.trapezoid((self.ambient.rho - rho) * const.g * r, r),  # y-momentum
+                        #integrate.trapz((self.ambient.rho - rho) * const.g * r, r),  # y-momentum
                         0])  # mixture fraction
 
         zero = np.zeros_like(r)
@@ -201,8 +202,8 @@ class Flame:
                         drhodS * V ** 2 * np.sin(theta) * r + 2 * rho * V * dVdS * np.sin(
                             theta) * r + rho * V ** 2 * np.cos(theta) * dthetadS * r,  # y-momentum
                         drhodS * V * f * r + rho * dVdS * f * r + rho * V * dfdS * r])  # mixture fraction
-        LHS = integrate.trapz(LHS, r)
-        
+        #LHS = integrate.trapz(LHS, r)
+        LHS = integrate.trapezoid(LHS, r)
         dz = np.append(np.linalg.solve(LHS, RHS), np.array([np.cos(theta), np.sin(theta)]), axis=0)
         return dz
 

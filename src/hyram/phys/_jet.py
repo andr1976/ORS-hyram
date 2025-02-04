@@ -587,7 +587,8 @@ class Jet:
                             ])*const.pi*lam**2*B/(lam**2 + 1)                
         RHSspec = Yamb*RHScont
         
-        LHSener = 2*const.pi*integrate.trapz(V*drhohdS*r + rhoh*dVdS*r, r)
+        #LHSener = 2*const.pi*integrate.trapz(V*drhohdS*r + rhoh*dVdS*r, r)
+        LHSener = 2*const.pi*integrate.trapezoid(V*drhohdS*r + rhoh*dVdS*r, r)
         LHSener += [const.pi/(6*lam**2 + 2)*(3*lam**2*rho_cl+rho_amb)*B**2*V_cl**2, #d/dS(V_cl)
                     const.pi/(9*lam**2 + 3)*(3*lam**2*rho_cl+rho_amb)*V_cl**3*B,    #d/dS(B)
                     const.pi/(6*lam**2 + 2)*lam**2*B**2*V_cl**3,                    #d/dS(rho_cl)
@@ -706,7 +707,8 @@ class Jet:
         mass_per_len = np.array([integrate.quad(lambda r: np.prod(rhoY(r, i))*2*const.pi*r, 
                                  r_r, r_l)[0] for i, r_r, r_l in zip(range(len(S)), r_rich, r_lean)])
         # integrate to find the total mass
-        return integrate.trapz(mass_per_len, S)
+        #return integrate.trapz(mass_per_len, S)
+        return integrate.trapezoid(mass_per_len, S)
     
     @property
     def _contourdata(self):

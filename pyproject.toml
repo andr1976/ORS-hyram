@@ -16,7 +16,7 @@ authors = [
 ]
 description = "Hydrogen Plus Other Alternative Fuels Risk Assessment Models Python Package"
 readme = "./src/hyram/README.md"
-requires-python = ">3.6, <3.11"
+requires-python = ">3.6, <3.12"
 keywords = ["hydrogen", "methane", "propane", "flame", "plume", "jet", "overpressure", "quantitative risk assessment", "risk"]
 license = {text = "GPL-3.0-only"}
 classifiers = [
@@ -24,7 +24,7 @@ classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Programming Language :: Python :: 3 :: Only"
 ]
-dependencies = ["matplotlib", "numpy", "scipy", "coolprop >= 6.3"]
+dependencies = ["matplotlib == 3.8", "numpy", "tcl", "tk", "scipy", "coolprop >= 6.3"]
 dynamic = ["version"]
 
 [project.urls]

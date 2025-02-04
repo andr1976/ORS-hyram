@@ -714,7 +714,7 @@ def jet_flame_analysis(amb_fluid, rel_fluid, orif_diam, mass_flow=None, dis_coef
                        # heat flux plot
                        analyze_flux=True, flux_plot_filename=None, flux_coordinates=None, flux_contours=None,
                        flux_xlims=None, flux_ylims=None, flux_zlims=None,
-                       output_dir=None, verbose=False):
+                       output_dir=None, verbose=False, wind_speed = 0):
     """
     Assess jet flame behavior and flux data and create corresponding plots.
 
@@ -833,7 +833,7 @@ def jet_flame_analysis(amb_fluid, rel_fluid, orif_diam, mass_flow=None, dis_coef
     flame_obj = Flame(rel_fluid, orifice, amb_fluid,
                       theta0=rel_angle, y0=0, mdot=mass_flow,
                       nn_conserve_momentum=conserve_momentum, nn_T=notional_nozzle_t,
-                      verbose=verbose)
+                      verbose=verbose, wind_speed=wind_speed)
 
     mass_flow = flame_obj.mass_flow_rate
     srad = flame_obj.get_srad()
