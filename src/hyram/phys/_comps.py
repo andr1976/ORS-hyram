@@ -335,6 +335,7 @@ class Source(object):
         fluid.update(T=T, rho=rho)
         throat = orifice.flow(fluid, ambient_P)
         h = therm.get_property("H", T=fluid.T, D=fluid.rho)
+        # u = therm.get_property("U", T=fluid.T, D=fluid.rho)
         dm_dt = -orifice.mdot(throat)
         du_dt = 1 / m * (heat_flux + (h - U) * dm_dt)
         return np.array([dm_dt, du_dt])

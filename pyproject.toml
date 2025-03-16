@@ -24,7 +24,7 @@ classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Programming Language :: Python :: 3 :: Only"
 ]
-dependencies = ["matplotlib == 3.8", "numpy", "tcl", "tk", "scipy", "coolprop >= 6.3"]
+dependencies = ["matplotlib == 3.8", "numpy", "tcl", "tk", "scipy", "coolprop >= 6.3", "xlwings"],
 dynamic = ["version"]
 
 [project.urls]

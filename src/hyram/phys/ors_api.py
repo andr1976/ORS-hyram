@@ -406,6 +406,31 @@ def run_jet_plume(sheet_name, filename=None):
 
     nozzle_model = sheet.range("NOZZLE_MODEL").value
 
+    if sheet.range("CONTOUR").value:
+        contour = sheet.range("CONTOUR").value
+    else:
+        contour = None
+    if sheet.range("XMIN").value:
+        xmin = sheet.range("XMIN").value
+    else:
+        xmin = None
+    if sheet.range("XMAX").value:
+        xmax = sheet.range("XMAX").value
+    else:
+        xmax = None
+    if sheet.range("YMIN").value:
+        ymin = sheet.range("YMIN").value
+    else:
+        ymin = None
+    if sheet.range("YMAX").value:
+        ymax = sheet.range("YMAX").value
+    else:
+        ymax = None
+    if sheet.range("VMAX").value:
+        vmax = sheet.range("VMAX").value
+    else:
+        vmax = 0.1
+
     if nozzle_model == "YuceilOtugen":
         nozzle_model = "yuce"
     if nozzle_model == "EwanMoodie":
@@ -434,7 +459,7 @@ def run_jet_plume(sheet_name, filename=None):
     Cd = sheet.range("LEAK_CD").value
 
     orifice = Orifice(leak_diam)
-    flame = Flame(release_fluid, orifice, ambient_fluid, verbose=True)
+    # flame = Flame(release_fluid, orifice, ambient_fluid, verbose=True)
 
     result = phys_api.analyze_jet_plume(
         ambient_fluid,
@@ -445,13 +470,13 @@ def run_jet_plume(sheet_name, filename=None):
         dis_coeff=Cd,
         nozzle_model=nozzle_model,
         create_plot=True,
-        contours=None,
-        xmin=None,
-        xmax=None,
-        ymin=None,
-        ymax=None,
+        contours=contour,
+        xmin=xmin,
+        xmax=xmax,
+        ymin=ymin,
+        ymax=ymax,
         vmin=0,
-        vmax=0.1,
+        vmax=vmax,
         plot_title="Mole Fraction of Leak",
         filename=None,
         output_dir=None,
@@ -462,8 +487,8 @@ def run_jet_plume(sheet_name, filename=None):
         result["plot"],
         name="Jet Plume",
         update=True,
-        left=sheet.range("B28").left,
-        top=sheet.range("B28").top,
+        left=sheet.range("B32").left,
+        top=sheet.range("B32").top,
     )
 
     sheet.range("RES_MASS_FLOW").value = result["mass_flow_rate"]
