@@ -3,7 +3,65 @@ import win32con
 import xlwings as xw
 import hyram.phys.api as phys_api
 import numpy as np
-from hyram.phys import Orifice, Flame, Jet
+from hyram.phys import Orifice, Flame, Jet, Source
+
+
+def run_blowdown(sheet_name, filename=None):
+    if filename == None:
+        wb = xw.Book.caller()
+    else:
+        wb = xw.Book(filename)
+
+    wb.app.calculation = "manual"
+    sheet = wb.sheets[sheet_name]
+
+    species = sheet.range("REL_COMP").value
+
+    if species == "mixture":
+        species = {}
+        for component, molefrac in zip(
+            sheet.range("HYRAM_COMPS").value, sheet.range("HYRAM_MOLEFRACS").value
+        ):
+            if molefrac and molefrac > 0:
+                species[component] = molefrac
+
+        # molefracs =
+
+    tank_volume = sheet.range("TANK_VOLUME").value
+    max_time = sheet.range("MAX_TIME").value
+    # win32api.MessageBox(wb.app.hwnd, str(sheet.range("BLOWDOWN").value), 'Warning', win32con.MB_ICONINFORMATION)
+
+    times = np.linspace(0, max_time, int(max_time))
+
+    release_fluid = phys_api.create_fluid(
+        species,
+        temp=sheet.range("STAG_TEMP").value + 273.15,  # K
+        pres=sheet.range("STAG_PRES").value * 1e5,  # Pa
+        phase="none",
+    )
+
+    ambient_fluid = phys_api.create_fluid(
+        "AIR",
+        temp=sheet.range("AMB_TEMP").value + 273.15,  # K
+        pres=sheet.range("AMB_PRES").value * 1e5,
+    )  # Pa
+    leak_diam = sheet.range("LEAK_DIAMETER").value / 1000  # m
+    rel_angle = sheet.range("RELEASE_ANGLE").value / 180 * np.pi
+    Cd = sheet.range("LEAK_CD").value
+
+    orifice = Orifice(leak_diam, Cd)
+    source = Source(tank_volume, release_fluid)
+    calc_flowrate, _, calc_time, _ = source.empty(orifice, t_empty=max_time)
+    fig = source.plot_time_to_empty()
+
+    sheet.pictures.add(
+        fig,
+        name="Blowdown",
+        update=True,
+        left=sheet.range("B68").left,
+        top=sheet.range("B68").top,
+        scale=1.3,
+    )
 
 
 def run_confined_overpressure(sheet_name, filename=None):
