@@ -184,9 +184,10 @@ def run_blowdown(sheet_name, filename=None):
 
     tank_volume = sheet.range("TANK_VOLUME").value
     max_time = sheet.range("MAX_TIME").value
-    # win32api.MessageBox(wb.app.hwnd, str(sheet.range("BLOWDOWN").value), 'Warning', win32con.MB_ICONINFORMATION)
 
-    times = np.linspace(0, max_time, int(max_time))
+    win32api.MessageBox(
+        wb.app.hwnd, str(max_time), "Warning", win32con.MB_ICONINFORMATION
+    )
 
     release_fluid = phys_api.create_fluid(
         species,
@@ -201,12 +202,16 @@ def run_blowdown(sheet_name, filename=None):
         pres=sheet.range("AMB_PRES").value * 1e5,
     )  # Pa
     leak_diam = sheet.range("LEAK_DIAMETER").value / 1000  # m
-    rel_angle = sheet.range("RELEASE_ANGLE").value / 180 * np.pi
     Cd = sheet.range("LEAK_CD").value
 
     orifice = Orifice(leak_diam, Cd)
     source = Source(tank_volume, release_fluid)
     calc_flowrate, _, calc_time, _ = source.empty(orifice, t_empty=max_time)
+    if max_time:
+        times = np.linspace(0, max_time, int(max_time))
+    else:
+        times = np.linspace(0, max(calc_time), int(max(calc_time)))
+
     fig = source.plot_time_to_empty()
 
     sheet.pictures.add(
@@ -217,6 +222,9 @@ def run_blowdown(sheet_name, filename=None):
         top=sheet.range("B68").top,
         scale=1.3,
     )
+
+    max_release_rate = max(calc_flowrate)
+    min_release_rate = min(calc_flowrate)
 
 
 def run_unconfined_overpressure(sheet_name, filename=None):
