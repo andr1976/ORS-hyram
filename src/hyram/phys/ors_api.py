@@ -207,10 +207,6 @@ def run_blowdown(sheet_name, filename=None):
     orifice = Orifice(leak_diam, Cd)
     source = Source(tank_volume, release_fluid)
     calc_flowrate, _, calc_time, _ = source.empty(orifice, t_empty=max_time)
-    if max_time:
-        times = np.linspace(0, max_time, int(max_time))
-    else:
-        times = np.linspace(0, max(calc_time), int(max(calc_time)))
 
     fig = source.plot_time_to_empty()
 
@@ -223,8 +219,19 @@ def run_blowdown(sheet_name, filename=None):
         scale=1.3,
     )
 
-    max_release_rate = max(calc_flowrate)
-    min_release_rate = min(calc_flowrate)
+    sheet.range("MAX_RELEASE").value = max(calc_flowrate)
+    sheet.range("MIN_RELEASE").value = min(calc_flowrate)
+    sheet.range("DURATION").value = max(calc_time)
+
+    times = np.linspace(0, int(max(calc_time)), 20)
+    pres = np.interp(times, source.ts, source.pres)
+    mdot = np.interp(times, source.ts, source.mdot)
+    mass = np.interp(times, source.ts, source.sol[0])
+
+    sheet.range("C33").options(transpose=True).value = times
+    sheet.range("D33").options(transpose=True).value = pres / 1e5
+    sheet.range("E33").options(transpose=True).value = mdot
+    sheet.range("F33").options(transpose=True).value = mass
 
 
 def run_unconfined_overpressure(sheet_name, filename=None):
