@@ -68,16 +68,26 @@ def create_fluid(species, temp=None, pres=None, density=None, phase=None):
     # User should pass only two specifiers for each fluid, after parsing
     num_params = len([x for x in [temp, pres, density, phase] if x is not None])
     if not num_params == 2:
-        message = ('Fluid must be defined by exactly two of the following parameters:'
-                   ' temperature, pressure, density, phase')
+        message = (
+            "Fluid must be defined by exactly two of the following parameters:"
+            " temperature, pressure, density, phase"
+        )
         raise ValueError(message)
 
     fluid = Fluid(species=species, T=temp, P=pres, rho=density, phase=phase)
     return fluid
 
 
-def compute_mass_flow(fluid, orif_diam, amb_pres=101325,
-                      is_steady=True, tank_vol=None, dis_coeff=1, output_dir=None, create_plot=True):
+def compute_mass_flow(
+    fluid,
+    orif_diam,
+    amb_pres=101325,
+    is_steady=True,
+    tank_vol=None,
+    dis_coeff=1,
+    output_dir=None,
+    create_plot=True,
+):
     """
     Calculate mass flow rate based on given conditions.
 
@@ -129,7 +139,7 @@ def compute_mass_flow(fluid, orif_diam, amb_pres=101325,
     orif = Orifice(orif_diam, Cd=dis_coeff)
 
     if is_steady:
-        result['rates'] = [orif.mdot(orif.flow(fluid, amb_pres))]
+        result["rates"] = [orif.mdot(orif.flow(fluid, amb_pres))]
 
     else:
         source = Source(tank_vol, fluid)
@@ -141,9 +151,9 @@ def compute_mass_flow(fluid, orif_diam, amb_pres=101325,
             filename = "time-to-empty-{}.png".format(misc_utils.get_now_str())
             filepath = os.path.join(output_dir, filename)
             fig = source.plot_time_to_empty()
-            fig.savefig(filepath, bbox_inches='tight')
+            fig.savefig(filepath, bbox_inches="tight")
             plt.close(fig)
-            result['plot'] = filepath
+            result["plot"] = filepath
 
         result["time_to_empty"] = t[-1]
         result["times"] = t
@@ -153,7 +163,9 @@ def compute_mass_flow(fluid, orif_diam, amb_pres=101325,
     return result
 
 
-def compute_tank_mass_param(species, phase=None, temp=None, pres=None, vol=None, mass=None):
+def compute_tank_mass_param(
+    species, phase=None, temp=None, pres=None, vol=None, mass=None
+):
     """
     Tank mass calculation.
     Three of temp (or phase), pressure, volume, or mass are required.
@@ -193,8 +205,13 @@ def compute_tank_mass_param(species, phase=None, temp=None, pres=None, vol=None,
     log.info("Tank Mass calculation requested")
 
     phase = misc_utils.parse_phase_key(phase)
-    if (temp is not None or phase is not None) and pres is not None and vol is not None and mass is not None:
-        msg = 'Too many inputs provided - three of [temperature (or phase), pressure, volume, mass] required'
+    if (
+        (temp is not None or phase is not None)
+        and pres is not None
+        and vol is not None
+        and mass is not None
+    ):
+        msg = "Too many inputs provided - three of [temperature (or phase), pressure, volume, mass] required"
         raise ValueError(msg)
 
     if vol is not None and mass is not None:
@@ -264,8 +281,12 @@ def compute_thermo_param(species, phase=None, temp=None, pres=None, density=None
     log.info("TPD Parameter calculation requested")
 
     phase = misc_utils.parse_phase_key(phase)
-    if pres is not None and density is not None and (temp is not None or phase is not None):
-        msg = 'Too many inputs provided - two of [temperature (or phase), pressure, density] are required'
+    if (
+        pres is not None
+        and density is not None
+        and (temp is not None or phase is not None)
+    ):
+        msg = "Too many inputs provided - two of [temperature (or phase), pressure, density] are required"
         raise ValueError(msg)
 
     fluid = create_fluid(species, temp, pres, density, phase)
@@ -301,7 +322,7 @@ def compute_equivalent_tnt_mass(vapor_mass, percent_yield, species):
 
     percent_yield : float
         Explosive energy yield (0 to 100%)
-    
+
     species : str or dict
         Name of fluid or dict of blend mixture of format {fluid-name: mole-frac...}
 
@@ -315,21 +336,40 @@ def compute_equivalent_tnt_mass(vapor_mass, percent_yield, species):
         species = misc_utils.parse_coolprop_dict_into_string(parsed_dict)
 
     heat_of_combustion = FuelProperties(species).dHc  # J/kg
-    log.info(f"TNT mass calculation: vapor mass {vapor_mass:,.4f} kg, yield {percent_yield:,.1f}%, heat of combustion {heat_of_combustion:,.5f} J/kg")
+    log.info(
+        f"TNT mass calculation: vapor mass {vapor_mass:,.4f} kg, yield {percent_yield:,.1f}%, heat of combustion {heat_of_combustion:,.5f} J/kg"
+    )
     yield_fraction = percent_yield / 100
-    result = TNT_method.calc_TNT_equiv_mass(equivalence_factor=yield_fraction,
-                                            flammable_mass=vapor_mass,
-                                            heat_of_combustion=heat_of_combustion)
+    result = TNT_method.calc_TNT_equiv_mass(
+        equivalence_factor=yield_fraction,
+        flammable_mass=vapor_mass,
+        heat_of_combustion=heat_of_combustion,
+    )
     log.info("TNT mass calculation complete")
     return result
 
 
-def analyze_jet_plume(amb_fluid, rel_fluid, orif_diam, mass_flow=None,
-                      rel_angle=(np.pi/2), dis_coeff=1, nozzle_model='yuce',
-                      create_plot=True, contours=None,
-                      xmin=None, xmax=None, ymin=None, ymax=None, vmin=0, vmax=0.1,
-                      plot_title="Mole Fraction of Leak",
-                      filename=None, output_dir=None, verbose=False):
+def analyze_jet_plume(
+    amb_fluid,
+    rel_fluid,
+    orif_diam,
+    mass_flow=None,
+    rel_angle=(np.pi / 2),
+    dis_coeff=1,
+    nozzle_model="yuce",
+    create_plot=True,
+    contours=None,
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
+    vmin=0,
+    vmax=0.1,
+    plot_title="Mole Fraction of Leak",
+    filename=None,
+    output_dir=None,
+    verbose=False,
+):
     """
     Simulate jet plume for leak and generate plume positional data, including mass and mole fractions, plume plot.
 
@@ -424,16 +464,25 @@ def analyze_jet_plume(amb_fluid, rel_fluid, orif_diam, mass_flow=None,
     contours = [contours] if type(contours) in [int, float] else contours
     contours = np.sort(contours)
 
-    log.info('Creating components')
+    log.info("Creating components")
     orifice = Orifice(orif_diam, dis_coeff)
 
     # Jet requires parameters defining notional nozzle model, rather than model itself.
-    nozzle_cons_momentum, nozzle_t_param = misc_utils.convert_nozzle_model_to_params(nozzle_model, rel_fluid)
+    nozzle_cons_momentum, nozzle_t_param = misc_utils.convert_nozzle_model_to_params(
+        nozzle_model, rel_fluid
+    )
 
-    log.info('Creating jet')
-    jet_obj = Jet(rel_fluid, orifice, amb_fluid, theta0=rel_angle, mdot=mass_flow,
-                  nn_conserve_momentum=nozzle_cons_momentum,
-                  nn_T=nozzle_t_param, verbose=verbose)
+    log.info("Creating jet")
+    jet_obj = Jet(
+        rel_fluid,
+        orifice,
+        amb_fluid,
+        theta0=rel_angle,
+        mdot=mass_flow,
+        nn_conserve_momentum=nozzle_cons_momentum,
+        nn_T=nozzle_t_param,
+        verbose=verbose,
+    )
 
     xs, ys, mole_fracs, mass_fracs, vs, temps = jet_obj.get_contour_data()
     mass_flow_rate = jet_obj.mass_flow_rate
@@ -450,14 +499,14 @@ def analyze_jet_plume(amb_fluid, rel_fluid, orif_diam, mass_flow=None,
 
         if xmin is not None and xmax is not None:
             if xmin >= xmax:
-                raise ValueError('x minimum must be less than x maximum')
+                raise ValueError("x minimum must be less than x maximum")
             xlims = (xmin, xmax)
         else:
             xlims = None
 
         if ymin is not None and ymax is not None:
             if ymin >= ymax:
-                raise ValueError('y minimum must be less than y maximum')
+                raise ValueError("y minimum must be less than y maximum")
             ylims = (ymin, ymax)
         else:
             ylims = None
@@ -468,39 +517,68 @@ def analyze_jet_plume(amb_fluid, rel_fluid, orif_diam, mass_flow=None,
             vmax = 0.1
 
         plot_filepath = os.path.join(output_dir, filename)
-        plot_fig = plot_contour(data_type="mole", jet_or_flame=jet_obj,
-                                xlims=xlims, ylims=ylims, vlims=(vmin, vmax),
-                                plot_title=plot_title, contour_levels=contours,)
-        plot_fig.savefig(plot_filepath, bbox_inches='tight')
+        plot_fig = plot_contour(
+            data_type="mole",
+            jet_or_flame=jet_obj,
+            xlims=xlims,
+            ylims=ylims,
+            vlims=(vmin, vmax),
+            plot_title=plot_title,
+            contour_levels=contours,
+        )
+        plot_fig.savefig(plot_filepath, bbox_inches="tight")
         plt.close(plot_fig)
         log.info("Plume plot complete")
     else:
-        plot_filepath = ''
+        plot_filepath = ""
 
-    result_dict = {'xs': xs,
-                   'ys': ys,
-                   'mole_fracs': mole_fracs,
-                   'mass_fracs': mass_fracs,
-                   'vs': vs,
-                   'temps': temps,
-                   'plot': plot_filepath,
-                   'mass_flow_rate': mass_flow_rate,
-                   'streamline_dists': streamline_dists,
-                   'mole_frac_dists': mole_frac_dists}
+    result_dict = {
+        "xs": xs,
+        "ys": ys,
+        "mole_fracs": mole_fracs,
+        "mass_fracs": mass_fracs,
+        "vs": vs,
+        "temps": temps,
+        "plot": plot_filepath,
+        "mass_flow_rate": mass_flow_rate,
+        "streamline_dists": streamline_dists,
+        "mole_frac_dists": mole_frac_dists,
+    }
     return result_dict
 
 
-def analyze_accumulation(amb_fluid, rel_fluid,
-                         tank_volume, orif_diam, rel_height,
-                         enclos_height, floor_ceil_area,
-                         ceil_vent_xarea, ceil_vent_height,
-                         floor_vent_xarea, floor_vent_height,
-                         times, orif_dis_coeff=1, ceil_vent_coeff=1, floor_vent_coeff=1,
-                         vol_flow_rate=0, dist_rel_to_wall=np.inf,
-                         tmax=None, rel_area=None, rel_angle=0, nozzle_key='yuce',
-                         x0=0, y0=0, nmax=1000,
-                         temp_pres_points=None, pres_ticks=None, is_steady=False,
-                         create_plots=True, output_dir=None, verbose=False):
+def analyze_accumulation(
+    amb_fluid,
+    rel_fluid,
+    tank_volume,
+    orif_diam,
+    rel_height,
+    enclos_height,
+    floor_ceil_area,
+    ceil_vent_xarea,
+    ceil_vent_height,
+    floor_vent_xarea,
+    floor_vent_height,
+    times,
+    orif_dis_coeff=1,
+    ceil_vent_coeff=1,
+    floor_vent_coeff=1,
+    vol_flow_rate=0,
+    dist_rel_to_wall=np.inf,
+    tmax=None,
+    rel_area=None,
+    rel_angle=0,
+    nozzle_key="yuce",
+    x0=0,
+    y0=0,
+    nmax=1000,
+    temp_pres_points=None,
+    pres_ticks=None,
+    is_steady=False,
+    create_plots=True,
+    output_dir=None,
+    verbose=False,
+):
     """
     Simulate an indoor release of designated fluid.
 
@@ -624,20 +702,42 @@ def analyze_accumulation(amb_fluid, rel_fluid,
     if isinstance(times, list):
         times = np.array(times)
 
-    log.info('Creating components')
+    log.info("Creating components")
     rel_source = Source(tank_volume, rel_fluid)
     orifice = Orifice(orif_diam, orif_dis_coeff)
 
-    conserve_momentum, notional_nozzle_t = misc_utils.convert_nozzle_model_to_params(nozzle_key, rel_fluid)
+    conserve_momentum, notional_nozzle_t = misc_utils.convert_nozzle_model_to_params(
+        nozzle_key, rel_fluid
+    )
     ceil_vent = Vent(ceil_vent_xarea, ceil_vent_height, ceil_vent_coeff, vol_flow_rate)
-    floor_vent = Vent(floor_vent_xarea, floor_vent_height, floor_vent_coeff, vol_flow_rate)
-    enclosure = Enclosure(enclos_height, floor_ceil_area, rel_height, ceil_vent, floor_vent,
-                          Xwall=dist_rel_to_wall)
+    floor_vent = Vent(
+        floor_vent_xarea, floor_vent_height, floor_vent_coeff, vol_flow_rate
+    )
+    enclosure = Enclosure(
+        enclos_height,
+        floor_ceil_area,
+        rel_height,
+        ceil_vent,
+        floor_vent,
+        Xwall=dist_rel_to_wall,
+    )
 
-    release_obj = IndoorRelease(rel_source, orifice, amb_fluid, enclosure,
-                                tmax=tmax, release_area=rel_area, steady=is_steady,
-                                nn_conserve_momentum=conserve_momentum, nn_T=notional_nozzle_t,
-                                theta0=rel_angle, x0=x0, y0=y0, nmax=nmax, verbose=verbose)
+    release_obj = IndoorRelease(
+        rel_source,
+        orifice,
+        amb_fluid,
+        enclosure,
+        tmax=tmax,
+        release_area=rel_area,
+        steady=is_steady,
+        nn_conserve_momentum=conserve_momentum,
+        nn_T=notional_nozzle_t,
+        theta0=rel_angle,
+        x0=x0,
+        y0=y0,
+        nmax=nmax,
+        verbose=verbose,
+    )
 
     # interpolate mass flow rates for given times
     rates = np.interp(times, release_obj.ts, release_obj.mdots)
@@ -648,73 +748,99 @@ def analyze_accumulation(amb_fluid, rel_fluid,
             output_dir = os.getcwd()
 
         now_str = misc_utils.get_now_str()
-        pres_plot_fpath = os.path.join(output_dir, 'pressure_plot_{}.png'.format(now_str))
-        layer_plot_fpath = os.path.join(output_dir, 'layer_plot_{}.png'.format(now_str))
-        traj_plot_fpath = os.path.join(output_dir, 'trajectory_plot_{}.png'.format(now_str))
-        mass_plot_fpath = os.path.join(output_dir, 'flam_mass_plot_{}.png'.format(now_str))
-        mass_flow_plot_fpath = os.path.join(output_dir, 'time-to-empty_{}.png'.format(now_str))
+        pres_plot_fpath = os.path.join(
+            output_dir, "pressure_plot_{}.png".format(now_str)
+        )
+        layer_plot_fpath = os.path.join(output_dir, "layer_plot_{}.png".format(now_str))
+        traj_plot_fpath = os.path.join(
+            output_dir, "trajectory_plot_{}.png".format(now_str)
+        )
+        mass_plot_fpath = os.path.join(
+            output_dir, "flam_mass_plot_{}.png".format(now_str)
+        )
+        mass_flow_plot_fpath = os.path.join(
+            output_dir, "time-to-empty_{}.png".format(now_str)
+        )
 
         pfig = release_obj.plot_overpressure(temp_pres_points, pres_ticks)
-        pfig.savefig(pres_plot_fpath, bbox_inches='tight')
+        pfig.savefig(pres_plot_fpath, bbox_inches="tight")
         plt.close(pfig)
 
         lfig = release_obj.plot_layer()
-        lfig.savefig(layer_plot_fpath, bbox_inches='tight')
+        lfig.savefig(layer_plot_fpath, bbox_inches="tight")
         plt.close(lfig)
 
         tfig = release_obj.plot_trajectories()
-        tfig.savefig(traj_plot_fpath, bbox_inches='tight')
+        tfig.savefig(traj_plot_fpath, bbox_inches="tight")
         plt.close(tfig)
 
         mfig = release_obj.plot_mass()
-        mfig.savefig(mass_plot_fpath, bbox_inches='tight')
+        mfig.savefig(mass_plot_fpath, bbox_inches="tight")
         plt.close(mfig)
 
         if is_steady:
-            mass_flow_plot_fpath = ''
+            mass_flow_plot_fpath = ""
         else:
             mdotfig = rel_source.plot_time_to_empty()
-            mdotfig.savefig(mass_flow_plot_fpath, bbox_inches = 'tight')
+            mdotfig.savefig(mass_flow_plot_fpath, bbox_inches="tight")
             plt.close(mdotfig)
 
     else:
-        pres_plot_fpath = ''
-        layer_plot_fpath = ''
-        traj_plot_fpath = ''
-        mass_plot_fpath = ''
-        mass_flow_plot_fpath = ''
+        pres_plot_fpath = ""
+        layer_plot_fpath = ""
+        traj_plot_fpath = ""
+        mass_plot_fpath = ""
+        mass_flow_plot_fpath = ""
 
     max_pres, max_time = release_obj.max_p_t()
 
     result_dict = {
-        'status': 1,
-        'pressures_per_time': release_obj.pressure(times),
-        'depths': release_obj.layer_depth(times),
-        'concentrations': release_obj.concentration(times),
-        'overpressure': max_pres,
-        'time_of_overp': max_time,
-        'mass_flow_rates': rates,
-        'pres_plot_filepath': pres_plot_fpath,
-        'mass_plot_filepath': mass_plot_fpath,
-        'layer_plot_filepath': layer_plot_fpath,
-        'trajectory_plot_filepath': traj_plot_fpath,
-        'mass_flow_plot_filepath': mass_flow_plot_fpath
+        "status": 1,
+        "pressures_per_time": release_obj.pressure(times),
+        "depths": release_obj.layer_depth(times),
+        "concentrations": release_obj.concentration(times),
+        "overpressure": max_pres,
+        "time_of_overp": max_time,
+        "mass_flow_rates": rates,
+        "pres_plot_filepath": pres_plot_fpath,
+        "mass_plot_filepath": mass_plot_fpath,
+        "layer_plot_filepath": layer_plot_fpath,
+        "trajectory_plot_filepath": traj_plot_fpath,
+        "mass_flow_plot_filepath": mass_flow_plot_fpath,
     }
 
     log.info("Accumulation analysis complete")
     return result_dict
 
 
-def jet_flame_analysis(amb_fluid, rel_fluid, orif_diam, mass_flow=None, dis_coeff=1,
-                       rel_angle=0,
-                       nozzle_key='yuce', rel_humid=0.89,
-                       # temperature plot
-                       create_temp_plot=True, temp_plot_filename=None, temp_plot_title="", temp_contours=None,
-                       temp_xlims=None, temp_ylims=None,
-                       # heat flux plot
-                       analyze_flux=True, flux_plot_filename=None, flux_coordinates=None, flux_contours=None,
-                       flux_xlims=None, flux_ylims=None, flux_zlims=None,
-                       output_dir=None, verbose=False, wind_speed = 0):
+def jet_flame_analysis(
+    amb_fluid,
+    rel_fluid,
+    orif_diam,
+    mass_flow=None,
+    dis_coeff=1,
+    rel_angle=0,
+    nozzle_key="yuce",
+    rel_humid=0.89,
+    # temperature plot
+    create_temp_plot=True,
+    temp_plot_filename=None,
+    temp_plot_title="",
+    temp_contours=None,
+    temp_xlims=None,
+    temp_ylims=None,
+    # heat flux plot
+    analyze_flux=True,
+    flux_plot_filename=None,
+    flux_coordinates=None,
+    flux_contours=None,
+    flux_xlims=None,
+    flux_ylims=None,
+    flux_zlims=None,
+    output_dir=None,
+    verbose=False,
+    wind_speed=0,
+):
     """
     Assess jet flame behavior and flux data and create corresponding plots.
 
@@ -826,14 +952,24 @@ def jet_flame_analysis(amb_fluid, rel_fluid, orif_diam, mass_flow=None, dis_coef
     if flux_contours is None:
         flux_contours = [1.577, 4.732, 25.237]
 
-    log.info('Creating components')
+    log.info("Creating components")
     orifice = Orifice(orif_diam, Cd=dis_coeff)
 
-    conserve_momentum, notional_nozzle_t = misc_utils.convert_nozzle_model_to_params(nozzle_key, rel_fluid)
-    flame_obj = Flame(rel_fluid, orifice, amb_fluid,
-                      theta0=rel_angle, y0=0, mdot=mass_flow,
-                      nn_conserve_momentum=conserve_momentum, nn_T=notional_nozzle_t,
-                      verbose=verbose, wind_speed=wind_speed)
+    conserve_momentum, notional_nozzle_t = misc_utils.convert_nozzle_model_to_params(
+        nozzle_key, rel_fluid
+    )
+    flame_obj = Flame(
+        rel_fluid,
+        orifice,
+        amb_fluid,
+        theta0=rel_angle,
+        y0=0,
+        mdot=mass_flow,
+        nn_conserve_momentum=conserve_momentum,
+        nn_T=notional_nozzle_t,
+        verbose=verbose,
+        wind_speed=wind_speed,
+    )
 
     mass_flow = flame_obj.mass_flow_rate
     srad = flame_obj.get_srad()
@@ -843,12 +979,18 @@ def jet_flame_analysis(amb_fluid, rel_fluid, orif_diam, mass_flow=None, dis_coef
     if create_temp_plot:
         log.info("Creating temp plot")
         if temp_plot_filename is None:
-            temp_plot_filename = 'flame_temp_plot_{}.png'.format(now_str)
+            temp_plot_filename = "flame_temp_plot_{}.png".format(now_str)
         temp_plot_filepath = os.path.join(output_dir, temp_plot_filename)
 
-        fig = plot_contour(data_type="temperature", jet_or_flame=flame_obj, xlims=temp_xlims, ylims=temp_ylims, plot_title=temp_plot_title,
-                           contour_levels=temp_contours)
-        fig.savefig(temp_plot_filepath, bbox_inches='tight')
+        fig = plot_contour(
+            data_type="temperature",
+            jet_or_flame=flame_obj,
+            xlims=temp_xlims,
+            ylims=temp_ylims,
+            plot_title=temp_plot_title,
+            contour_levels=temp_contours,
+        )
+        fig.savefig(temp_plot_filepath, bbox_inches="tight")
         plt.close(fig)
     else:
         log.info("Skipping temp plot")
@@ -857,13 +999,18 @@ def jet_flame_analysis(amb_fluid, rel_fluid, orif_diam, mass_flow=None, dis_coef
     if analyze_flux:
         log.info("Assessing flux and creating plots")
         if flux_plot_filename is None:
-            flux_plot_filename = 'flame_heatflux_{}.png'.format(now_str)
+            flux_plot_filename = "flame_heatflux_{}.png".format(now_str)
 
-        heatflux_filepath = flame_obj.plot_heat_flux_sliced(filename=flux_plot_filename,
-                                                            directory=output_dir,
-                                                            RH=rel_humid, contours=flux_contours,
-                                                            xlims=flux_xlims, ylims=flux_ylims, zlims=flux_zlims,
-                                                            savefig=True)
+        heatflux_filepath = flame_obj.plot_heat_flux_sliced(
+            filename=flux_plot_filename,
+            directory=output_dir,
+            RH=rel_humid,
+            contours=flux_contours,
+            xlims=flux_xlims,
+            ylims=flux_ylims,
+            zlims=flux_zlims,
+            savefig=True,
+        )
         pos_flux = flame_obj.generate_positional_flux(flux_coordinates, rel_humid)
     else:
         log.info("Skipping flux analysis")
@@ -871,27 +1018,46 @@ def jet_flame_analysis(amb_fluid, rel_fluid, orif_diam, mass_flow=None, dis_coef
         pos_flux = None
 
     log.info("Jet flame analysis complete")
-    return temp_plot_filepath, heatflux_filepath, pos_flux, mass_flow, srad, visible_length, radiant_frac
+    return (
+        temp_plot_filepath,
+        heatflux_filepath,
+        pos_flux,
+        mass_flow,
+        srad,
+        visible_length,
+        radiant_frac,
+    )
 
 
-def compute_overpressure(method: str, locations,
-                         ambient_fluid, release_fluid,
-                         orifice_diameter: float, mass_flow=None,
-                         release_angle: float = 0, discharge_coefficient: float = 1,
-                         nozzle_model: str = 'yuce',
-                         bst_flame_speed: float = 0.35, tnt_factor: float = 0.03,
-                         flammability_limits=None,
-                         origin_at_orifice=False,
-                         create_overpressure_plot: bool = True,
-                         create_impulse_plot: bool = True,
-                         overpressure_plot_filename=None,
-                         impulse_plot_filename=None,
-                         output_dir=None, verbose=False,
-                         overp_contours=None,
-                         overp_xlims=None, overp_ylims=None, overp_zlims=None,
-                         impulse_contours=None,
-                         impulse_xlims=None, impulse_ylims=None, impulse_zlims=None,
-                         ):
+def compute_overpressure(
+    method: str,
+    locations,
+    ambient_fluid,
+    release_fluid,
+    orifice_diameter: float,
+    mass_flow=None,
+    release_angle: float = 0,
+    discharge_coefficient: float = 1,
+    nozzle_model: str = "yuce",
+    bst_flame_speed: float = 0.35,
+    tnt_factor: float = 0.03,
+    flammability_limits=None,
+    origin_at_orifice=False,
+    create_overpressure_plot: bool = True,
+    create_impulse_plot: bool = True,
+    overpressure_plot_filename=None,
+    impulse_plot_filename=None,
+    output_dir=None,
+    verbose=False,
+    overp_contours=None,
+    overp_xlims=None,
+    overp_ylims=None,
+    overp_zlims=None,
+    impulse_contours=None,
+    impulse_xlims=None,
+    impulse_ylims=None,
+    impulse_zlims=None,
+):
     """
     Calculate the overpressure and impulse at a specified locations
 
@@ -899,7 +1065,7 @@ def compute_overpressure(method: str, locations,
     ----------
     method : {'bst', 'tnt', 'bauwens'}
         Unconfined overpressure calculation method
-    
+
     locations : list
         List of locations at which to determine flux,
         each location is a tuple of 3 coordinates (m):
@@ -928,17 +1094,17 @@ def compute_overpressure(method: str, locations,
 
     bst_flame_speed : float, optional, only needed for BST model
         available mach flame speeds 0.2, 0.35, 0.7, 1.0, 1.4, 2.0, 3.0, 4.0, 5.2
-        use 5.2 for detonation 
+        use 5.2 for detonation
 
     tnt_factor : float, optional, only needed for TNT model
         equivalence factor, float
         TNT equivalency, unitless
         based on HSE guidance in CCPS book https://ebookcentral.proquest.com/lib/sandia/detail.action?docID=624492
         equivalence_factor = 0.03
-    
+
     flammability_limits : tuple of (lower_flammability_limit, upper_flammability_limit), optional
         Default is None: use default LFL, UFL for selected fuel
-        
+
     origin_at_orifice : boolean, optional, default to False
         specify if the origin should be at the orifice or calculated
 
@@ -997,7 +1163,7 @@ def compute_overpressure(method: str, locations,
         mass_flow_rate : float
             Mass flow rate (kg/s) of release
         flam_or_det_mass : float
-            Mass of release related to overpressure calculation (kg). 
+            Mass of release related to overpressure calculation (kg).
             Outputs flammable mass for BST and TNT methods, detonable mass for Bauwens
 
     """
@@ -1006,34 +1172,49 @@ def compute_overpressure(method: str, locations,
     log.info(misc_utils.params_as_str(params))
 
     orifice = Orifice(orifice_diameter, discharge_coefficient)
-    nozzle_cons_momentum, nozzle_t_param = misc_utils.convert_nozzle_model_to_params(nozzle_model, release_fluid)
-    log.info('Creating jet')
-    jet_object = Jet(release_fluid, orifice, ambient_fluid, mdot=mass_flow, theta0=release_angle,
-                     nn_conserve_momentum=nozzle_cons_momentum, nn_T=nozzle_t_param, verbose=verbose)
+    nozzle_cons_momentum, nozzle_t_param = misc_utils.convert_nozzle_model_to_params(
+        nozzle_model, release_fluid
+    )
+    log.info("Creating jet")
+    jet_object = Jet(
+        release_fluid,
+        orifice,
+        ambient_fluid,
+        mdot=mass_flow,
+        theta0=release_angle,
+        nn_conserve_momentum=nozzle_cons_momentum,
+        nn_T=nozzle_t_param,
+        verbose=verbose,
+    )
 
     method = method.lower()
-    if method == 'bst':
+    if method == "bst":
         log.info("Calculating overpressure with BST method")
-        over_pressure_model = BST_method(jet_object=jet_object,
-                                         mach_flame_speed=bst_flame_speed,
-                                         flammability_limits=flammability_limits,
-                                         origin_at_orifice=origin_at_orifice)
+        over_pressure_model = BST_method(
+            jet_object=jet_object,
+            mach_flame_speed=bst_flame_speed,
+            flammability_limits=flammability_limits,
+            origin_at_orifice=origin_at_orifice,
+        )
         flam_or_det_mass = over_pressure_model.flammable_mass
-    elif method == 'tnt':
+    elif method == "tnt":
         log.info("Calculating overpressure with TNT method")
-        over_pressure_model = TNT_method(jet_object=jet_object,
-                                         equivalence_factor=tnt_factor,
-                                         flammability_limits=flammability_limits,
-                                         origin_at_orifice=origin_at_orifice)
+        over_pressure_model = TNT_method(
+            jet_object=jet_object,
+            equivalence_factor=tnt_factor,
+            flammability_limits=flammability_limits,
+            origin_at_orifice=origin_at_orifice,
+        )
         flam_or_det_mass = over_pressure_model.flammable_mass
-    elif method == 'bauwens':
+    elif method == "bauwens":
         log.info("Calculating overpressure with Bauwens method")
-        over_pressure_model = Bauwens_method(jet_object=jet_object,
-                                             origin_at_orifice=origin_at_orifice)
+        over_pressure_model = Bauwens_method(
+            jet_object=jet_object, origin_at_orifice=origin_at_orifice
+        )
         flam_or_det_mass = over_pressure_model.detonable_mass
     else:
-        raise ValueError('Invalid method name in unconfined overpressure analysis')
-    
+        raise ValueError("Invalid method name in unconfined overpressure analysis")
+
     overpressure = over_pressure_model.calc_overpressure(locations)
     impulse = over_pressure_model.calc_impulse(locations)
 
@@ -1043,15 +1224,16 @@ def compute_overpressure(method: str, locations,
             output_dir = os.getcwd()
         if overpressure_plot_filename is None:
             now_str = misc_utils.get_now_str()
-            overpressure_plot_filename = 'overpressure_plot_{}.png'.format(now_str)
+            overpressure_plot_filename = "overpressure_plot_{}.png".format(now_str)
         overpressure_plot_filepath = over_pressure_model.plot_overpressure_sliced(
-                                                            plot_filename=overpressure_plot_filename,
-                                                            directory=output_dir,
-                                                            contours=overp_contours,
-                                                            xlims=overp_xlims,
-                                                            ylims=overp_ylims,
-                                                            zlims=overp_zlims,
-                                                            savefig=True)
+            plot_filename=overpressure_plot_filename,
+            directory=output_dir,
+            contours=overp_contours,
+            xlims=overp_xlims,
+            ylims=overp_ylims,
+            zlims=overp_zlims,
+            savefig=True,
+        )
     else:
         log.info("Skipping overpressure plot")
         overpressure_plot_filepath = None
@@ -1062,26 +1244,27 @@ def compute_overpressure(method: str, locations,
             output_dir = os.getcwd()
         if impulse_plot_filename is None:
             now_str = misc_utils.get_now_str()
-            impulse_plot_filename = 'impulse_plot_{}.png'.format(now_str)
+            impulse_plot_filename = "impulse_plot_{}.png".format(now_str)
         impulse_plot_filepath = over_pressure_model.plot_impulse_sliced(
-                                                            plot_filename=impulse_plot_filename,
-                                                            directory=output_dir,
-                                                            contours=impulse_contours,
-                                                            xlims=impulse_xlims,
-                                                            ylims=impulse_ylims,
-                                                            zlims=impulse_zlims,
-                                                            savefig=True)
+            plot_filename=impulse_plot_filename,
+            directory=output_dir,
+            contours=impulse_contours,
+            xlims=impulse_xlims,
+            ylims=impulse_ylims,
+            zlims=impulse_zlims,
+            savefig=True,
+        )
     else:
         log.info("Skipping impulse plot")
         impulse_plot_filepath = None
 
     log.info("Unconfined overpressure calculation complete")
     results = {
-        'overpressures': overpressure,
-        'impulses': impulse,
-        'overp_plot_filepath': overpressure_plot_filepath,
-        'impulse_plot_filepath': impulse_plot_filepath,
-        'mass_flow_rate': jet_object.mass_flow_rate,
-        'flam_or_det_mass': flam_or_det_mass
+        "overpressures": overpressure,
+        "impulses": impulse,
+        "overp_plot_filepath": overpressure_plot_filepath,
+        "impulse_plot_filepath": impulse_plot_filepath,
+        "mass_flow_rate": jet_object.mass_flow_rate,
+        "flam_or_det_mass": flam_or_det_mass,
     }
     return results

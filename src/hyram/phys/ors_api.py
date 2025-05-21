@@ -483,26 +483,29 @@ def run_jet_plume(sheet_name, filename=None):
         contour = sheet.range("CONTOUR").value
     else:
         contour = None
-    if sheet.range("XMIN").value:
+    if sheet.range("XMIN").value is not None:
         xmin = sheet.range("XMIN").value
     else:
         xmin = None
-    if sheet.range("XMAX").value:
+    if sheet.range("XMAX").value is not None:
         xmax = sheet.range("XMAX").value
     else:
         xmax = None
-    if sheet.range("YMIN").value:
+    if sheet.range("YMIN").value is not None:
         ymin = sheet.range("YMIN").value
     else:
         ymin = None
-    if sheet.range("YMAX").value:
+    if sheet.range("YMAX").value is not None:
         ymax = sheet.range("YMAX").value
     else:
         ymax = None
+
     if sheet.range("VMAX").value:
         vmax = sheet.range("VMAX").value
+        vmin = 0
     else:
         vmax = 0.1
+        vmin = 0
 
     if nozzle_model == "YuceilOtugen":
         nozzle_model = "yuce"
@@ -548,7 +551,9 @@ def run_jet_plume(sheet_name, filename=None):
         xmax=xmax,
         ymin=ymin,
         ymax=ymax,
-        vmin=0,
+        # ymin=-10,
+        # ymax=0,
+        vmin=vmin,
         vmax=vmax,
         plot_title="Mole Fraction of Leak",
         filename=None,
@@ -584,7 +589,7 @@ def run_jet_plume(sheet_name, filename=None):
 
 if __name__ == "__main__":
     release_fluid = phys_api.create_fluid(
-        "CO2", temp=288, pres=23.3e6, phase="none"  # K  # Pa
+        "CO2", temp=288, pres=10e6, phase="none"  # K  # Pa
     )
 
     ambient_fluid = phys_api.create_fluid("AIR", temp=288, pres=101325)  # K  # Pa
@@ -597,15 +602,15 @@ if __name__ == "__main__":
         release_fluid,
         leak_diam,
         mass_flow=None,
-        rel_angle=(0 * np.pi / 2),
+        rel_angle=(1 * np.pi / 2),
         dis_coeff=1,
         nozzle_model="yuce",
         create_plot=True,
         contours=[0.05],
-        xmin=0,
-        xmax=15,
-        ymin=-2,
-        ymax=2,
+        xmin=-2,
+        xmax=2,
+        ymin=0,
+        ymax=15,
         vmin=0,
         vmax=0.1,
         plot_title="Mole Fraction of Leak",
